@@ -22,7 +22,7 @@ public class FileController {
 
     @PostMapping("/upload")
     public Flux<Void> uploadAndProcessFile(@RequestPart("file") FilePart filePart) {
-        return filePart.transferTo(new File("uploaded.txt"))
-                .thenMany(fileProcessorService.processFile("uploaded.txt"));
+        return filePart.transferTo(new File("uploaded.csv"))
+                .thenMany(fileProcessorService.processFile("uploaded.csv"));
     }
 }

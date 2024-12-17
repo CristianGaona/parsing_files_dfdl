@@ -1,52 +1,39 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+           xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:ex="http://example.com"
+           targetNamespace="http://example.com" elementFormDefault="unqualified">
 
-      http://www.apache.org/licenses/LICENSE-2.0
+    <xs:include schemaLocation="org/apache/daffodil/xsd/DFDLGeneralFormat.dfdl.xsd" />
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
+    <xs:annotation>
+        <xs:appinfo source="http://www.ogf.org/dfdl/">
+            <dfdl:format ref="ex:GeneralFormat" separator="" initiator=""
+                         terminator="" textTrimKind="none" initiatedContent="no" ignoreCase="no"
+                         separatorPosition="infix" occursCountKind="implicit"
+                         emptyValueDelimiterPolicy="both" representation="text" textNumberRep="standard"
+                         lengthKind="delimited" encoding="ASCII" encodingErrorPolicy="error" />
+        </xs:appinfo>
+    </xs:annotation>
 
-<schema
-        xmlns="http://www.w3.org/2001/XMLSchema"
-        xmlns:xs="http://www.w3.org/2001/XMLSchema"
-        xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/"
-        xmlns:ex="http://example.com"
-        targetNamespace="http://example.com"
-        elementFormDefault="unqualified">
+    <xs:element name="file">
+        <xs:complexType>
+            <xs:sequence dfdl:separator="%NL;" dfdl:separatorPosition="postfix">
+                <xs:element name="header" minOccurs="0" maxOccurs="1"
+                            dfdl:occursCountKind="implicit">
+                    <xs:complexType>
+                        <xs:sequence dfdl:separator=",">
+                            <xs:element name="title" type="xs:string" maxOccurs="unbounded" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="record" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence dfdl:separator=",">
+                            <xs:element name="item" type="xs:string" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
 
-    <include schemaLocation="/org/apache/daffodil/xsd/DFDLGeneralFormat.dfdl.xsd"/>
-
-    <annotation>
-        <appinfo source="http://www.ogf.org/dfdl/">
-            <dfdl:format ref="ex:GeneralFormat" />
-        </appinfo>
-    </annotation>
-    <element name="countryCode" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="accountId" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="sequence" type="xs:int" />
-    <element name="branchId" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="customerId" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="currency" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="amount" type="xs:int" />
-    <element name="accountType" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="accountGroup" type="xs:int" />
-    <element name="subAccount" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="operationCode" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="reference" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="senderId" type="xs:string" dfdl:lengthKind="delimited" />
-    <element name="customerName" type="xs:string" dfdl:lengthKind="delimited" />
-    <xs:element name="additionalData" type="xs:string" dfdl:lengthKind="delimited" />
-    <xs:element name="email" type="xs:string" />
-
-
-</schema>

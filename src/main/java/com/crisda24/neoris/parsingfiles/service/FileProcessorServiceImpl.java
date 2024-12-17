@@ -7,11 +7,17 @@ import org.apache.daffodil.japi.ParseResult;
 import org.apache.daffodil.japi.io.InputSourceDataInputStream;
 import org.apache.daffodil.japi.infoset.JDOMInfosetOutputter;
 import org.jdom2.Document;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 @Service
 public class FileProcessorServiceImpl implements FileProcessorService {
@@ -41,37 +47,54 @@ public class FileProcessorServiceImpl implements FileProcessorService {
     public Mono<Void> processFile(String filePath) {
         System.out.println("archivo -> " + filePath);
         return Mono.create(sink -> {
-            try (FileInputStream fis = new FileInputStream(new File(filePath))) {
+            try {
+                // Fuerza los saltos de línea a LF (\n)
+                String content = Files.readString(Paths.get(filePath), StandardCharsets.UTF_8);
+                content = content.replace("\r\n", "\n"); // Normaliza CRLF a LF
+                Files.write(Paths.get(filePath), content.getBytes(StandardCharsets.UTF_8));
 
-                String fileContent = new String(fis.readAllBytes());
-                System.out.println("Contenido del archivo recibido:");
-                System.out.println(fileContent); // Imprimir el contenido como texto
+                // Crear InputStream después de forzar el formato del archivo
+                try (FileInputStream fis = new FileInputStream(new File(filePath))) {
 
-                InputSourceDataInputStream inputStream = new InputSourceDataInputStream(fis);
+                    InputSourceDataInputStream inputStream = new InputSourceDataInputStream(fis);
+                    DataProcessor processor = determineSchema(filePath);
+                    JDOMInfosetOutputter outputter = new JDOMInfosetOutputter();
 
-                DataProcessor processor = determineSchema(filePath);
-                JDOMInfosetOutputter outputter = new JDOMInfosetOutputter();
+                    ParseResult parseResult = processor.parse(inputStream, outputter);
 
-                ParseResult parseResult = processor.parse(inputStream, outputter);
+                    if (parseResult.isError()) {
+                        sink.error(new RuntimeException("Errores durante el parseo: " + parseResult.getDiagnostics()));
+                    } else {
+                        // Obtener el resultado del parseo en formato XML (JDOM Document)
+                        Document xmlDocument = outputter.getResult();
 
-                if (parseResult.isError()) {
-                    sink.error(new RuntimeException("Errores durante el parseo: " + parseResult.getDiagnostics()));
-                } else {
-                    // Obtener el resultado en formato XML
-                    System.out.println("LEER "+ outputter.getResult());
-                    Document xmlDocument = outputter.getResult();
+                        // Guardar el XML resultante en un archivo
+                        saveOutputToFile(xmlDocument, "output.xml");
+                        System.out.println("El resultado del parseo se ha guardado en 'output.xml'");
 
-                    // Imprimir el XML resultante
-                    System.out.println("Resultado del parseo:");
-                    System.out.println(xmlDocument.toString());
-
-                    sink.success();
+                        sink.success();
+                    }
                 }
             } catch (Exception e) {
                 sink.error(e);
             }
         });
     }
+
+    private void saveOutputToFile(Document xmlDocument, String outputPath) {
+        try {
+            // Utiliza XMLOutputter para escribir el XML en un archivo con formato bonito
+            XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
+            Files.writeString(
+                    Paths.get(outputPath),
+                    xmlOutputter.outputString(xmlDocument),
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
+            );
+        } catch (Exception e) {
+            System.err.println("Error al guardar el archivo de salida XML: " + e.getMessage());
+            e.printStackTrace();
+        }}
 
     private DataProcessor determineSchema(String filePath) {
         if (filePath.endsWith(".schema2")) {
